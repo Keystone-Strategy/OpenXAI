@@ -21,9 +21,9 @@ from openxai.explainers.catalog.perturbation_methods import NormalPerturbation
 from openxai.explainers.catalog.perturbation_methods import NewDiscrete_NormalPerturbation
 
 # Choose the model and the data set you wish to generate explanations for
-data_loader_batch_size = 10
-data_name = 'heloc'  # must be one of ['heloc', 'adult', 'german', 'compas']
-model_name = 'lr'  # must be one of ['lr', 'ann']
+data_loader_batch_size = 32
+data_name = 'compas'  # must be one of ['heloc', 'adult', 'german', 'compas']
+model_name = 'ann'  # must be one of ['lr', 'ann']
 
 """### (0) Explanation method hyperparameters"""
 
@@ -42,7 +42,7 @@ loader_train, loader_test = return_loaders(data_name=data_name,
                                            download=True,
                                            batch_size=data_loader_batch_size)
 data_iter = iter(loader_test)
-inputs, labels = data_iter.next()
+inputs, labels = next(data_iter)
 labels = labels.type(torch.int64)
 
 # get full training data set
@@ -108,9 +108,9 @@ shap = Explainer(method='shap',
 shap_default_exp = shap.get_explanation(inputs.float(),
                                 label=labels)
 
-explainers = [control, grad, ig, itg, sg, shap, lime]
-explanations = [control_default_exp, grad_default_exp, ig_default_exp, itg_default_exp, sg_default_exp, shap_default_exp, lime_default_exp]
-algos = ['control', 'grad', 'ig', 'itg', 'sg', 'shap', 'lime']
+explainers = [shap]
+explanations = [shap_default_exp]
+algos = ['shap']
 
 def generate_mask(explanation, top_k):
     mask_indices = torch.topk(explanation, top_k).indices
@@ -202,7 +202,7 @@ for explainer, explanation_x, algo in zip(explainers, explanations, algos):
         # SRA = []
         PGU = []
         PGI = []
-        # RIS = []
+        RIS = []
         # ROS = []
         # RRS = []
 
@@ -211,7 +211,7 @@ for explainer, explanation_x, algo in zip(explainers, explanations, algos):
         for topk in range(1, input_dict['explanation_x'].shape[0]+1):
 
             # topk and mask
-            input_dict['top_k'] = topk
+            input_dict['top_k'] = 3
             input_dict['mask'] = generate_mask(input_dict['explanation_x'].reshape(-1), input_dict['top_k'])
 
             evaluator = Evaluator(input_dict,
@@ -254,8 +254,8 @@ for explainer, explanation_x, algo in zip(explainers, explanations, algos):
             # print('PGI:', PGI[-1])
 
         # # evaluate prediction gap on important features
-        # RIS.append(evaluator.evaluate(metric='RIS'))
-        # print('RIS:', RIS[-1])
+        RIS.append(evaluator.evaluate(metric='RIS'))
+        print('RIS:', RIS[-1])
 
         # # evaluate prediction gap on important features
         # ROS.append(evaluator.evaluate(metric='ROS'))
@@ -271,6 +271,8 @@ for explainer, explanation_x, algo in zip(explainers, explanations, algos):
         # RA_AUC.append(auc(auc_x, RA))
         # SA_AUC.append(auc(auc_x, SA))
         # SRA_AUC.append(auc(auc_x, SRA))
+        print("AUC_X:", auc_x)
+
         PGU_AUC.append(auc(auc_x, PGU))
         PGI_AUC.append(auc(auc_x, PGI))
 

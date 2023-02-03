@@ -56,7 +56,7 @@ def Explainer(method: str,
             param_dict_shap = dict()
             param_dict_shap['subset_size'] = 500
         explainer = SHAPExplainerC(model,
-                                   model_impl='torch',
+                                   model_impl='xgb',
                                    n_samples=param_dict_shap['subset_size'])
 
     elif method == 'lime':

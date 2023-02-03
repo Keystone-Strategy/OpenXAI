@@ -9,7 +9,7 @@
 import torch
 from ...api import Explainer
 from captum.attr import KernelShap
-
+import pandas as pd
 
 class SHAPExplainerC(Explainer):
     '''
@@ -28,9 +28,14 @@ class SHAPExplainerC(Explainer):
             self.explainer = KernelShap(model)
         elif model_impl == 'sklearn':
             self.explainer = KernelShap(self.forward_func_sklearn)
+        elif model_impl == 'xgb':
+            self.explainer = KernelShap(self.forward_func_sklearn)
 
     def forward_func_sklearn(self, input):
         return torch.tensor(self.model.predict_proba(input))
+
+    def forward_func_xgb(self, input):
+        return self.model.predict(input)
 
     def forward_func_torch(self, input):
         return self.model(input)
