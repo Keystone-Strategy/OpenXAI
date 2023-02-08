@@ -46,6 +46,7 @@ inputs, labels = next(data_iter)
 labels = labels.type(torch.int64)
 
 # get full training data set
+# print(len(loader_train.dataset.data))
 data_all = torch.FloatTensor(loader_train.dataset.data)
 
 """### (2) Load a pretrained ML model"""
@@ -164,6 +165,7 @@ for explainer, explanation_x, algo in zip(explainers, explanations, algos):
     # SRA_AUC = []
     PGU_AUC = []
     PGI_AUC = []
+    print(len(inputs))
     for index in range(data_loader_batch_size):
         print('iteration:', index)
 
@@ -205,7 +207,7 @@ for explainer, explanation_x, algo in zip(explainers, explanations, algos):
         RIS = []
         # ROS = []
         # RRS = []
-
+        print("y pred",input_dict['y_pred'])
         auc_x = np.arange(1, input_dict['explanation_x'].shape[0]+1) / input_dict['explanation_x'].shape[0]
 
         for topk in range(1, input_dict['explanation_x'].shape[0]+1):
@@ -254,8 +256,8 @@ for explainer, explanation_x, algo in zip(explainers, explanations, algos):
             # print('PGI:', PGI[-1])
 
         # # evaluate prediction gap on important features
-        RIS.append(evaluator.evaluate(metric='RIS'))
-        print('RIS:', RIS[-1])
+        # RIS.append(evaluator.evaluate(metric='RIS'))
+        # print('RIS:', RIS[-1])
 
         # # evaluate prediction gap on important features
         # ROS.append(evaluator.evaluate(metric='ROS'))

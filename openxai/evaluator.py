@@ -10,11 +10,12 @@ class Evaluator():
     """ Metrics to evaluate an explanation method.
     """
 
-    def __init__(self, input_dict: dict, inputs, labels, model, explainer):
+    def __init__(self, input_dict: dict, inputs, labels, model, explainer, model_type='torch'):
         self.input_dict = input_dict
         self.inputs = inputs
         self.labels = labels
         self.model = model
+        self.model_type = model_type
         self.explainer = explainer
         if hasattr(model, 'return_ground_truth_importance'):
             self.gt_feature_importances = self.model.return_ground_truth_importance(self.inputs)
@@ -30,7 +31,8 @@ class Evaluator():
     def evaluate(self, metric: str):
         """Explanation evaluation of a given metric
         """
-        if not hasattr(self.model, 'return_ground_truth_importance') and metric in ['PRA', 'RC', 'FA', 'RA', 'SA', 'SRA']:
+        if not hasattr(self.model, 'return_ground_truth_importance') and metric in ['PRA', 'RC', 'FA', 'RA', 'SA',
+                                                                                    'SRA']:
             raise ValueError("This chosen metric is incompatible with non-linear models.")
 
         # Pairwise rank agreement
@@ -103,7 +105,7 @@ class Evaluator():
             # Calculate correlation on ranks (iterate through rows: https://stackoverflow.com/questions/44947030/how-to-get-scipy-stats-spearmanra-b-compute-correlation-only-between-variable)
             rho, _ = pearsonr(all_feat_ranksA[row, :], all_feat_ranksB[row, :])
             corrs.append(rho)
-        
+
         # return metric's distribution and average
         return np.array(corrs), np.mean(corrs)
 
@@ -137,7 +139,7 @@ class Evaluator():
                 rel_rankingB = all_feat_ranksB[:, feat1] < all_feat_ranksB[:, feat2]
                 feat_pairs_w_same_rel_rankings += rel_rankingA == rel_rankingB
 
-        pairwise_distr = feat_pairs_w_same_rel_rankings/comb(n_feat, 2)
+        pairwise_distr = feat_pairs_w_same_rel_rankings / comb(n_feat, 2)
 
         return pairwise_distr, np.mean(pairwise_distr)
 
@@ -146,7 +148,7 @@ class Evaluator():
         attrA = self.gt_feature_importances.detach().numpy().reshape(1, -1)
         attrB = self.explanation_x_f.detach().numpy().reshape(1, -1)
         k = self.input_dict['top_k']
-        
+
         if metric is None:
             metric_type = self.input_dict['eval_metric']
         else:
@@ -157,13 +159,14 @@ class Evaluator():
         topk_idB = np.argsort(-np.abs(attrB), axis=1)[:, 0:k]
 
         # rank of top-k features --> manually calculate rankings (instead of using 0, 1, ..., k ranking based on argsort output) to account for ties
-        all_feat_ranksA = rankdata(-np.abs(attrA), method='dense', axis=1) #rankdata gives rank1 for smallest # --> we want rank1 for largest # (aka # with largest magnitude)
+        all_feat_ranksA = rankdata(-np.abs(attrA), method='dense',
+                                   axis=1)  # rankdata gives rank1 for smallest # --> we want rank1 for largest # (aka # with largest magnitude)
         all_feat_ranksB = rankdata(-np.abs(attrB), method='dense', axis=1)
         topk_ranksA = np.take_along_axis(all_feat_ranksA, topk_idA, axis=1)
         topk_ranksB = np.take_along_axis(all_feat_ranksB, topk_idB, axis=1)
 
         # sign of top-k features
-        topk_signA = np.take_along_axis(np.sign(attrA), topk_idA, axis=1)  #pos=1; neg=-1
+        topk_signA = np.take_along_axis(np.sign(attrA), topk_idA, axis=1)  # pos=1; neg=-1
         topk_signB = np.take_along_axis(np.sign(attrB), topk_idB, axis=1)
 
         # overlap agreement = (# topk features in common)/k
@@ -171,7 +174,7 @@ class Evaluator():
             topk_setsA = [set(row) for row in topk_idA]
             topk_setsB = [set(row) for row in topk_idB]
             # check if: same id
-            metric_distr = np.array([len(setA.intersection(setB))/k for setA, setB in zip(topk_setsA, topk_setsB)])
+            metric_distr = np.array([len(setA.intersection(setB)) / k for setA, setB in zip(topk_setsA, topk_setsB)])
 
         # rank agreement
         elif metric_type == 'rank':
@@ -179,25 +182,29 @@ class Evaluator():
             topk_idB_df = pd.DataFrame(topk_idB).applymap(str)
             topk_ranksA_df = pd.DataFrame(topk_ranksA).applymap(str)  # rank (accounting for ties)
             topk_ranksB_df = pd.DataFrame(topk_ranksB).applymap(str)
-            
-            #check if: same id + rank
+
+            # check if: same id + rank
             topk_id_ranksA_df = ('feat' + topk_idA_df) + ('rank' + topk_ranksA_df)
             topk_id_ranksB_df = ('feat' + topk_idB_df) + ('rank' + topk_ranksB_df)
-            metric_distr = (topk_id_ranksA_df == topk_id_ranksB_df).sum(axis=1).to_numpy()/k
+            metric_distr = (topk_id_ranksA_df == topk_id_ranksB_df).sum(axis=1).to_numpy() / k
 
         # sign agreement
         elif metric_type == 'sign':
-            topk_idA_df = pd.DataFrame(topk_idA).applymap(str)  # id (contains rank info --> order of features in columns)
+            topk_idA_df = pd.DataFrame(topk_idA).applymap(
+                str)  # id (contains rank info --> order of features in columns)
             topk_idB_df = pd.DataFrame(topk_idB).applymap(str)
             topk_signA_df = pd.DataFrame(topk_signA).applymap(str)  # sign
             topk_signB_df = pd.DataFrame(topk_signB).applymap(str)
-            
-            #check if: same id + sign
-            topk_id_signA_df = ('feat' + topk_idA_df) + ('sign' + topk_signA_df)  # id + sign (contains rank info --> order of features in columns)
+
+            # check if: same id + sign
+            topk_id_signA_df = ('feat' + topk_idA_df) + (
+                        'sign' + topk_signA_df)  # id + sign (contains rank info --> order of features in columns)
             topk_id_signB_df = ('feat' + topk_idB_df) + ('sign' + topk_signB_df)
-            topk_id_signA_sets = [set(row) for row in topk_id_signA_df.to_numpy()]  # id + sign (remove order info --> by converting to sets)
+            topk_id_signA_sets = [set(row) for row in
+                                  topk_id_signA_df.to_numpy()]  # id + sign (remove order info --> by converting to sets)
             topk_id_signB_sets = [set(row) for row in topk_id_signB_df.to_numpy()]
-            metric_distr = np.array([len(setA.intersection(setB))/k for setA, setB in zip(topk_id_signA_sets, topk_id_signB_sets)])
+            metric_distr = np.array(
+                [len(setA.intersection(setB)) / k for setA, setB in zip(topk_id_signA_sets, topk_id_signB_sets)])
 
         # rank and sign agreement
         elif metric_type == 'ranksign':
@@ -207,17 +214,17 @@ class Evaluator():
             topk_ranksB_df = pd.DataFrame(topk_ranksB).applymap(str)
             topk_signA_df = pd.DataFrame(topk_signA).applymap(str)  # sign
             topk_signB_df = pd.DataFrame(topk_signB).applymap(str)
-            
+
             # check if: same id + rank + sign
             topk_id_ranks_signA_df = ('feat' + topk_idA_df) + ('rank' + topk_ranksA_df) + ('sign' + topk_signA_df)
             topk_id_ranks_signB_df = ('feat' + topk_idB_df) + ('rank' + topk_ranksB_df) + ('sign' + topk_signB_df)
-            metric_distr = (topk_id_ranks_signA_df == topk_id_ranks_signB_df).sum(axis=1).to_numpy()/k
-        
+            metric_distr = (topk_id_ranks_signA_df == topk_id_ranks_signB_df).sum(axis=1).to_numpy() / k
+
         else:
-            raise NotImplementedError("Please make sure that have chosen one of the following metrics: {ranksign, rank, overlap, sign}.")
+            raise NotImplementedError(
+                "Please make sure that have chosen one of the following metrics: {ranksign, rank, overlap, sign}.")
 
         return metric_distr, np.mean(metric_distr)
-
 
     def _arr(self, x) -> np.ndarray:
         """ Converts x to a numpy array.
@@ -236,7 +243,7 @@ class Evaluator():
         top_k_magnitude_threshold = top_k_vals[-1]
         mask = torch.abs(explanation) > top_k_magnitude_threshold
         return mask
-    
+
     def _compute_flattened_explanation_for_predicted_label(self) -> np.ndarray:
         """ Returns a np.ndarray containing the explanation at x with respect to label y_pred.
         """
@@ -272,13 +279,15 @@ class Evaluator():
             self.y_pred = self.input_dict['y_pred']
 
         # predictive model
-        if eval_metric in ['eval_pred_faithfulness', 'eval_relative_stability', 'eval_group_fairness', 'eval_gt_similarity','eval_gt_rank', 'eval_gt_f1k']:
+        if eval_metric in ['eval_pred_faithfulness', 'eval_relative_stability', 'eval_group_fairness',
+                           'eval_gt_similarity', 'eval_gt_rank', 'eval_gt_f1k']:
             if not 'model' in self.input_dict:
                 raise ValueError('Missing key of model')
             self.model = self.input_dict['model']
 
         # callable explainer class
-        if eval_metric in ['eval_relative_stability', 'eval_group_fairness', 'eval_gt_similarity', 'eval_gt_rank', 'eval_gt_f1k']:
+        if eval_metric in ['eval_relative_stability', 'eval_group_fairness', 'eval_gt_similarity', 'eval_gt_rank',
+                           'eval_gt_f1k']:
             if not 'explainer' in self.input_dict:
                 raise ValueError('Missing key of explainer')
             self.explainer = self.input_dict['explainer']
@@ -351,7 +360,7 @@ class Evaluator():
         if eval_metric in ['eval_gt_similarity', 'eval_gt_rank', 'eval_gt_f1k']:
             # use the model's return_ground_truth_importance function to get the ground truth
             self.gt_feature_importances = self.model.return_ground_truth_importance(self.x)
-            
+
     def eval_pred_faithfulness(self, num_samples: int = 100, invert: bool = False):
         """ Approximates the expected local faithfulness of the explanation
             in a neighborhood around input x.
@@ -362,7 +371,7 @@ class Evaluator():
 
         if invert:
             self.top_k_mask = torch.logical_not(self.top_k_mask)
-        
+
         # get perturbations of instance x
         x_perturbed = self.perturb_method.get_perturbed_inputs(original_sample=self.x,
                                                                feature_mask=self.top_k_mask,
@@ -371,11 +380,27 @@ class Evaluator():
                                                                feature_metadata=self.feature_metadata)
 
         # Average the expected absolute difference.
-        y = self._arr(self.model.predict(self.x.float().view(1, -1)))
-        y_perturbed = self._arr(self.model.predict(x_perturbed.float()))
-        print("y", y)
-        print("y_perturbed:", y_perturbed)
-        return np.mean(np.abs(y - y_perturbed), axis=0)
+
+        # y = self._arr(self.model(self.x.reshape(1, -1).float()))
+        # y_perturbed = self._arr(self.model(x_perturbed.float()))
+        #
+        # # y = self._arr(self.model.predict(self.x.reshape(1, -1).float()))
+        # # y_perturbed = self._arr(self.model.predict(x_perturbed.float()))
+        if self.model_type == 'xgb':
+            y = self._arr(self.model.predict(self.x.float().view(1, -1)))
+            y_perturbed = self._arr(self.model.predict(x_perturbed.float()))
+            return np.mean(np.abs(y - y_perturbed), axis=0)
+        else:
+            y = self._arr(self.model(self.x.reshape(1, -1).float()))
+            y_perturbed = self._arr(self.model(x_perturbed.float()))
+            return np.mean(np.abs(y - y_perturbed), axis=0)[0]
+        # print("y", y)
+        # print("y_perturbed:", y_perturbed)
+
+
+        # return np.mean(np.abs(y - y_perturbed), axis=0)
+
+        # return np.mean(np.abs(y - y_perturbed), axis=0)[0]
 
     def _compute_Lp_norm_diff(self, vec1, vec2, normalize_to_relative_change: bool = True, eps: np.float = 0.001):
         """ Returns the Lp norm of the difference between vec1 and vec2.
@@ -392,7 +417,7 @@ class Evaluator():
             flat_diff = np.divide(flat_diff, vec1_arr, where=vec1_arr != 0)
 
         return np.linalg.norm(flat_diff, ord=self.p_norm)
-    
+
     def _get_predicted_class(self, x):
         """ Returns the predicted class of self.model(x).
         
@@ -423,7 +448,7 @@ class Evaluator():
         rep_diffs = []
         x_diffs = []
         exp_diffs = []
-        
+
         # get perturbations of instance x, and for each perturbed instance compute an explanation
         if x_prime_samples is None:
             # Perturb input
@@ -449,7 +474,7 @@ class Evaluator():
                 lab = y_prime_preds[it].type(torch.int64)
                 exp = self.explainer.get_explanation(x_prime.float(), label=lab)
                 exp_prime_samples[it, :] = exp
-            
+
         for sample_ind, x_prime in enumerate(x_prime_samples):
             x_prime = x_prime.unsqueeze(0)
 
@@ -476,7 +501,7 @@ class Evaluator():
                 x_diffs.append(self._compute_Lp_norm_diff(self.x, x_prime))
 
             stability_ratios.append(stability_measure)
-                
+
         ind_max = np.argmax(stability_ratios)
 
         return stability_ratios[ind_max]  # , stability_ratios, rep_diffs, x_diffs, exp_diffs, ind_max
