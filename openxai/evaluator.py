@@ -387,9 +387,11 @@ class Evaluator():
         # # y = self._arr(self.model.predict(self.x.reshape(1, -1).float()))
         # # y_perturbed = self._arr(self.model.predict(x_perturbed.float()))
         if self.model_type == 'xgb':
-            y = self._arr(self.model.predict(self.x.float().view(1, -1)))
-            y_perturbed = self._arr(self.model.predict(x_perturbed.float()))
-            return np.mean(np.abs(y - y_perturbed), axis=0)
+            y = self._arr(self.model.predict_proba(self.x.float().view(1, -1)))
+            y_perturbed = self._arr(self.model.predict_proba(x_perturbed.float()))
+            print("y", y)
+            print("y_perturbed:", y_perturbed)
+            return np.mean(np.abs(y - y_perturbed), axis=0)[0]
         else:
             y = self._arr(self.model(self.x.reshape(1, -1).float()))
             y_perturbed = self._arr(self.model(x_perturbed.float()))
