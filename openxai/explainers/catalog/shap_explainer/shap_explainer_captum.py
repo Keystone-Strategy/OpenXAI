@@ -9,6 +9,7 @@
 import torch
 from ...api import Explainer
 from captum.attr import KernelShap
+import pandas as pd
 
 
 class SHAPExplainerC(Explainer):
@@ -20,7 +21,7 @@ class SHAPExplainerC(Explainer):
     '''
 
     def __init__(self, model, baseline_data: torch.FloatTensor = None,
-                 model_impl: str = 'torch',
+                 model_impl: str = 'sklearn',
                  n_samples=500) -> None:
         super().__init__(model)
         self.n_samples = n_samples
@@ -28,9 +29,20 @@ class SHAPExplainerC(Explainer):
             self.explainer = KernelShap(model)
         elif model_impl == 'sklearn':
             self.explainer = KernelShap(self.forward_func_sklearn)
+        elif model_impl == 'ebm':
+            self.explainer = KernelShap(self.forward_func_ebm)
 
     def forward_func_sklearn(self, input):
         return torch.tensor(self.model.predict_proba(input))
+    
+    def forward_func_ebm(self, input):
+        # return self.model.predict(input)
+        test = torch.tensor(self.model.predict(pd.DataFrame(input).astype("float")))
+        test = test.unsqueeze(0)
+        print(test.shape)
+        print(type(test))
+        print(test)
+        return torch.tensor(self.model.predict(pd.DataFrame(input).astype("float"))).unsqueeze(0)
 
     def forward_func_torch(self, input):
         return self.model(input)

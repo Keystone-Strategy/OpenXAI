@@ -10,6 +10,7 @@ from openxai.explainers import SmoothGrad
 from openxai.explainers import LIME
 from openxai.explainers import SHAPExplainerC
 from openxai.explainers import RandomBaseline
+from openxai.explainers import EBM
 
 
 def Explainer(method: str,
@@ -56,7 +57,7 @@ def Explainer(method: str,
             param_dict_shap = dict()
             param_dict_shap['subset_size'] = 500
         explainer = SHAPExplainerC(model,
-                                   model_impl='torch',
+                                   model_impl='sklearn',
                                    n_samples=param_dict_shap['subset_size'])
 
     elif method == 'lime':
@@ -78,6 +79,10 @@ def Explainer(method: str,
                          kernel_width=param_dict_lime['kernel_width'],
                          n_samples=param_dict_lime['n_samples'],
                          discretize_continuous=param_dict_lime['discretize_continuous'])
+    
+    elif method == 'ebm_global':
+        explainer = EBM(model, dataset_tensor)
+        
 
     elif method == 'control':
         explainer = RandomBaseline(model)

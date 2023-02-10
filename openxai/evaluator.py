@@ -371,9 +371,10 @@ class Evaluator():
                                                                feature_metadata=self.feature_metadata)
 
         # Average the expected absolute difference.
-        y = self._arr(self.model(self.x.reshape(1, -1).float()))
-        y_perturbed = self._arr(self.model(x_perturbed.float()))
-
+        y = self._arr(self.model.predict_proba(self.x.float()))
+        y_perturbed = self._arr(self.model.predict_proba(x_perturbed.float()))
+        print("Y", y)
+        print("y_perturbed", y_perturbed)
         return np.mean(np.abs(y - y_perturbed), axis=0)[0]
 
     def _compute_Lp_norm_diff(self, vec1, vec2, normalize_to_relative_change: bool = True, eps: np.float = 0.001):
@@ -398,7 +399,7 @@ class Evaluator():
         Args:
             x: single input of shape (0, d) with d features.
         """
-        y_prbs = self.model(x.float())
+        y_prbs = self.model.predict_proba(x.float())
         return torch.argmax(y_prbs, dim=1)
 
     def eval_relative_stability(self,

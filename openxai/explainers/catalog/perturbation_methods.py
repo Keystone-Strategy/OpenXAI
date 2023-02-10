@@ -146,6 +146,11 @@ class NormalPerturbation(BasePerturbation):
         num_samples : number of perturbed samples.
         max_distance : the maximum distance between original sample and purturbed samples.
         '''
+        # print("original_sample: ",original_sample)
+        # print("feature_mask: ", feature_mask)
+        # print("num_samples: ",num_samples)
+        # print("feature_metadata: ", feature_metadata)
+        # print("max_distance: ", max_distance)
         feature_type = feature_metadata
         assert len(feature_mask) == len(
             original_sample), "mask size == original sample in get_perturbed_inputs for {}".format(self.__class__)
@@ -165,7 +170,7 @@ class NormalPerturbation(BasePerturbation):
         p = torch.empty(num_samples, len(feature_type)).fill_(flip_percentage)
         perturbations = perturbations * (~discrete_features) + torch.abs(
             (perturbations * discrete_features) - (torch.bernoulli(p) * discrete_features))
-
+        # print("perturbations", perturbations)
         # keeping features static that are in top-K based on feature mask
         perturbed_samples = original_sample * feature_mask + perturbations * (~feature_mask)
 

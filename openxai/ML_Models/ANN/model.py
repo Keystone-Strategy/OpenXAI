@@ -57,7 +57,7 @@ class ANN_softmax(nn.Module):
             input = torch.from_numpy(np.array(data)).float()
         else:
             input = data.float()
-
+            
         return self.forward(input).detach().numpy()
     
     def predict(self, data):
