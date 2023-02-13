@@ -6,6 +6,9 @@
 - This distribution of OpenXAI may not work with any model except an EBM. The PGU/PGI computation has been modified to take into account the EBM's predict_proba() function. 
 - I have also added an EBM explainer class that calculates global feature importance. I am still in the process of testing it on other datasets since I had to mod the output quite a bit to account for only the original features (EBM sometimes gives combined importances of more than 1 feature). 
 - You can find my EBM notebook (*OpenXAI+EBM.ipynb*) under the KS_Notebooks folder.
+
+02/13/2022
+- Added support for EBM local and show() as an explainer argument.
  
 [**Website**](https://open-xai.github.io/) | [**arXiv Paper**](https://arxiv.org/abs/2206.11104)
 
