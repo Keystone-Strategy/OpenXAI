@@ -12,6 +12,7 @@ from openxai.explainers import SHAPExplainerC
 from openxai.explainers import RandomBaseline
 from openxai.explainers import EBM
 from openxai.explainers import EBMLocal
+from openxai.explainers import EBMShap
 
 def Explainer(method: str,
               model,
@@ -85,6 +86,9 @@ def Explainer(method: str,
     
     elif method == 'ebm_local':
         explainer = EBMLocal(model, dataset_tensor)
+        
+    elif method == 'ebm_shap':
+        explainer = EBMShap(model, data = dataset_tensor)
         
 
     elif method == 'control':

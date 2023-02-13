@@ -8,5 +8,6 @@ from .catalog import (
     SHAPExplainerC,
     RandomBaseline,
     EBM,
-    EBMLocal
+    EBMLocal,
+    EBMShap
 )

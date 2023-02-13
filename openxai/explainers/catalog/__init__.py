@@ -9,3 +9,4 @@ from .shap_explainer import SHAPExplainerC
 from .smoothgrad import SmoothGrad
 from .ebm import EBM
 from .ebm_local import EBMLocal
+from .ebm_shap import EBMShap
