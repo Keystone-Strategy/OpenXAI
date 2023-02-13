@@ -82,14 +82,13 @@ def Explainer(method: str,
                          discretize_continuous=param_dict_lime['discretize_continuous'])
     
     elif method == 'ebm_global':
-        explainer = EBM(model, dataset_tensor)
+        explainer = EBM(model)
     
     elif method == 'ebm_local':
-        explainer = EBMLocal(model, dataset_tensor)
+        explainer = EBMLocal(model)
         
     elif method == 'ebm_shap':
         explainer = EBMShap(model, data = dataset_tensor)
-        
 
     elif method == 'control':
         explainer = RandomBaseline(model)

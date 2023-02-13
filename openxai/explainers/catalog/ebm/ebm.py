@@ -15,16 +15,15 @@ class EBM(Explainer):
     mode : str, "tabular" or "images"
     """
 
-    def __init__(self, model, data: torch.FloatTensor) -> None:
+    def __init__(self, model, data=None) -> None:
 
         self.output_dim = 2
-        self.data = data.numpy()
         self.model = model
 
         super(EBM, self).__init__(model)
 
-    def get_explanation(self, all_data: torch.FloatTensor, label=None, mode=None) -> torch.FloatTensor:
-        all_data = all_data.numpy()
+    def get_explanation(self, all_data = None, label=None, mode=None) -> torch.FloatTensor:
+        # all_data = all_data.numpy()
         # num_features = all_data.shape[1]
 
         ebm_res = self.model.explain_global()

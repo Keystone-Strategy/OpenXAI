@@ -373,8 +373,6 @@ class Evaluator():
         # Average the expected absolute difference.
         y = self._arr(self.model.predict_proba(self.x.float()))
         y_perturbed = self._arr(self.model.predict_proba(x_perturbed.float()))
-        print("Y", y)
-        print("y_perturbed", y_perturbed)
         return np.mean(np.abs(y - y_perturbed), axis=0)[0]
 
     def _compute_Lp_norm_diff(self, vec1, vec2, normalize_to_relative_change: bool = True, eps: np.float = 0.001):
