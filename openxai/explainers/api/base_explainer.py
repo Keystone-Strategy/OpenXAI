@@ -22,7 +22,7 @@ class Explainer(ABC):
         self.model = mlmodel
 
     @abstractmethod
-    def get_explanation(self, inputs: torch.tensor, label: torch.Tensor):
+    def get_explanation(self, inputs: torch.tensor, label: torch.Tensor, mode: None):
         """
         Generate explanations for given input/s.
         Parameters

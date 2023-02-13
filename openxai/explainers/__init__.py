@@ -7,5 +7,6 @@ from .catalog import (
     LIME,
     SHAPExplainerC,
     RandomBaseline,
-    EBM
+    EBM,
+    EBMLocal
 )

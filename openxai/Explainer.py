@@ -11,7 +11,7 @@ from openxai.explainers import LIME
 from openxai.explainers import SHAPExplainerC
 from openxai.explainers import RandomBaseline
 from openxai.explainers import EBM
-
+from openxai.explainers import EBMLocal
 
 def Explainer(method: str,
               model,
@@ -82,6 +82,9 @@ def Explainer(method: str,
     
     elif method == 'ebm_global':
         explainer = EBM(model, dataset_tensor)
+    
+    elif method == 'ebm_local':
+        explainer = EBMLocal(model, dataset_tensor)
         
 
     elif method == 'control':

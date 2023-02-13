@@ -3,6 +3,7 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 from ... api import Explainer
+from interpret import show
 
 
 class EBM(Explainer):
@@ -22,13 +23,15 @@ class EBM(Explainer):
 
         super(EBM, self).__init__(model)
 
-    def get_explanation(self, all_data: torch.FloatTensor, label=None) -> torch.FloatTensor:
-
+    def get_explanation(self, all_data: torch.FloatTensor, label=None, mode=None) -> torch.FloatTensor:
         all_data = all_data.numpy()
-        num_features = all_data.shape[1]
+        # num_features = all_data.shape[1]
 
-        ebm_res = self.model.explain_global().data()
-        df = pd.DataFrame (ebm_res, columns = ['names','scores'])
-        fin_res = df[~df["names"].str.contains("&")]
+        ebm_res = self.model.explain_global()
 
-        return torch.FloatTensor(fin_res['scores'])
+        if mode == "graphic":
+            return show(ebm_res)
+        else:
+            df = pd.DataFrame (ebm_res.data(), columns = ['names','scores'])
+            fin_res = df[~df["names"].str.contains("&")]
+            return torch.FloatTensor(fin_res['scores'])
