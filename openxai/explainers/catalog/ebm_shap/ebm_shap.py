@@ -24,7 +24,7 @@ class EBMShap(Explainer):
 
         super().__init__(model)
 
-    def get_explanation(self, all_data: torch.FloatTensor, label: torch.FloatTensor, mode=None) -> torch.FloatTensor:
+    def get_explanation(self, all_data, label, mode=None) -> torch.FloatTensor:
 
         # all_data = all_data.numpy()
         # label = label.numpy()
