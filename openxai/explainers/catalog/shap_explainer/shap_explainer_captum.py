@@ -35,14 +35,6 @@ class SHAPExplainerC(Explainer):
     def forward_func_sklearn(self, input):
         return torch.tensor(self.model.predict_proba(input))
     
-    def forward_func_ebm(self, input):
-        # return self.model.predict(input)
-        test = torch.tensor(self.model.predict(pd.DataFrame(input).astype("float")))
-        test = test.unsqueeze(0)
-        print(test.shape)
-        print(type(test))
-        print(test)
-        return torch.tensor(self.model.predict(pd.DataFrame(input).astype("float"))).unsqueeze(0)
 
     def forward_func_torch(self, input):
         return self.model(input)

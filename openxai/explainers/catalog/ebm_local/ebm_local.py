@@ -15,10 +15,10 @@ class EBMLocal(Explainer):
     mode : str, "tabular" or "images"
     """
 
-    def __init__(self, model, data: torch.FloatTensor) -> None:
+    def __init__(self, model, data = None) -> None:
 
         self.output_dim = 2
-        self.data = data.numpy()
+        # self.data = data.numpy()
         self.model = model
 
         super(EBMLocal, self).__init__(model)
@@ -39,12 +39,6 @@ class EBMLocal(Explainer):
             for i in range(len(label)):
                 df  = pd.DataFrame(ebmLocal_res.data(i), columns = ['names', 'scores'])
                 fin_res = df[~df["names"].str.contains("&")]
-                temp = []
-                for j in range(len(fin_res['scores'])):
-                    temp.append(fin_res['scores'][j])
-                res.append(temp)
-                temp = []
-
-            # df = pd.DataFrame (ebm_res, columns = ['names','scores'])
+                res.append(fin_res['scores'].values.tolist())
             
             return torch.from_numpy(np.array(res))
