@@ -44,12 +44,3 @@ class EBMShap(Explainer):
                 res.append(df['scores'].values.tolist())
                 
             return torch.from_numpy(np.array(res))
-
-        
-        
-'''
-dir(object_name)
-
-
-NOTE: When you want to pass data to test, pass just one datapoint, it's rlly slow
-'''
